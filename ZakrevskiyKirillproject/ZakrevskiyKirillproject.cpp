@@ -1,6 +1,9 @@
 ﻿#include <iostream>
+using namespace std;
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    int input_data;
+    cout << "Hello World!\n";
+    cin >> input_data;
 }
