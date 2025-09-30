@@ -20,8 +20,7 @@ struct CS
 };
 
 void AddPipe(Pipe &t) {
-	system("cls");
-	cout << "Введите название трубы:";
+	cout << "\nВведите название трубы:";
 	cin >> t.name;
 	cout << "Введите длину трубы:";
 	cin >> t.length;
@@ -31,9 +30,8 @@ void AddPipe(Pipe &t) {
 	cin >> t.status;
 }
 
-void AddCS(CS& c) {
-	system("cls");
-	cout << "Введите название КС:";
+void AddCS(CS &c) {
+	cout << "\nВведите название КС:";
 	cin >> c.name;
 	cout << "Введите количество цехов:";
 	cin >> c.num_work;
@@ -43,25 +41,35 @@ void AddCS(CS& c) {
 	cin >> c.class_cs;
 }
 
-void ShowAll(Pipe& t, CS& c) {
-	system("cls");
-	cout << "Название трубы: " << t.name << endl
+void ShowAll(Pipe &t, CS &c) {
+	cout << "\nНазвание трубы: " << t.name << endl
 		<< "Длина трубы: " << t.length << endl
 		<< "Диаметр трубы: " << t.diameter << endl
 		<< "Статус трубы (0-не в ремонте/1-в ремонте): " << t.status << endl
 		<< "\nНазвание КС: " << c.name << endl
 		<< "Количество цехов: " << c.num_work << endl
 		<< "Количество рабочих цехов: " << c.num_work_online << endl
-		<< "Класс станции: " << c.class_cs << endl
-		<< "\nНажмите Enter, чтобы вернуться в меню...";
-	cin.ignore(numeric_limits<streamsize>::max(), '\n');
-	cin.get();
+		<< "Класс станции: " << c.class_cs << endl;
+}
+
+void EditPipe(Pipe &t) {
+	cout << "\nВведите новый статус трубы (0-не в ремонте/1-в ремонте): ";
+	cin >> t.status;
+}
+
+void EditCS(CS &c) {
+	int opt;
+	cout << "\nЧтобы запустить цех, введите: 1" << endl
+		<< "Чтобы остановить цех, введите: 0\n";
+	cin >> opt;
+	if (opt == 1) {c.num_work_online++; }
+	else { c.num_work_online--; }
 }
 
 void Show_menu(Pipe &t, CS &c) {
 	int option;
 	while (true) {
-		cout << "Выберите опцию:\n"
+		cout << "\nВыберите опцию:\n"
 			<< "1. Добавить трубу\n"
 			<< "2. Добавить КС\n"
 			<< "3. Посмотреть все объекты\n"
@@ -73,11 +81,13 @@ void Show_menu(Pipe &t, CS &c) {
 			<< "Ваш выбор: ";
 		cin >> option;
 		switch (option) {
-		case 1: AddPipe(t); system("cls"); break;
-		case 2: AddCS(c); system("cls"); break;
-		case 3: ShowAll(t, c); system("cls"); break;
+		case 1: AddPipe(t); break;
+		case 2: AddCS(c); break;
+		case 3: ShowAll(t, c); break;
+		case 4: EditPipe(t); break;
+		case 5: EditCS(c); break;
 		case 0: return;
-		default: system("cls"); cout << "Выбрана несуществующая опция, введите число от 0 до 7!\n\n";
+		default: cout << "\nВыбрана несуществующая опция, введите число от 0 до 7!\n\n";
 		}
 	}
 }
