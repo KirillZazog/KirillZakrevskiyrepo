@@ -1,5 +1,6 @@
 ﻿#include <fstream>
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -19,26 +20,53 @@ struct CS
 	string class_cs;
 };
 
+void clear_stdin() {
+	cin.clear();
+	cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
 void AddPipe(Pipe &t) {
 	cout << "\nВведите название трубы:";
-	cin >> t.name;
-	cout << "Введите длину трубы:";
-	cin >> t.length;
-	cout << "Введите диаметр трубы:";
-	cin >> t.diameter;
+	clear_stdin();
+	getline(cin, t.name);
+
+	cout << "Введите длину трубы (км, положительное число):";
+	while (!(cin >> t.length) || t.length < 0.0f) {
+		cout << "Неверный ввод. Введите положительное число для длины: ";
+		clear_stdin();
+	}
+
+	cout << "Введите диаметр трубы (м, положительное число):";
+	while (!(cin >> t.diameter) || t.diameter <= 0) {
+		cout << "Неверный ввод. Введите положительное целое для диаметра: ";
+		clear_stdin();
+	}
 	cout << "Введите статус трубы (0-не в ремонте/1-в ремонте):";
-	cin >> t.status;
+	int temp_status;
+	while (!(cin >> temp_status) || (temp_status != 0 && temp_status != 1)) {
+		cout << "Неверный ввод. Введите 0 или 1: ";
+		clear_stdin();
+	}
+	t.status = (temp_status == 1);
+	clear_stdin();
 }
 
 void AddCS(CS &c) {
 	cout << "\nВведите название КС:";
-	cin >> c.name;
-	cout << "Введите количество цехов:";
-	cin >> c.num_work;
-	cout << "Введите количество рабочих цехов:";
-	cin >> c.num_work_online;
+	clear_stdin();
+	getline(cin, c.name);
+	cout << "Введите количество цехов (целое >= 0):";
+	while (!(cin >> c.num_work) || c.num_work < 0) {
+		cout << "Неверный ввод. Введите целое число >= 0:";
+		clear_stdin();
+	}
+	cout << "Введите количество рабочих цехов (целое, 0..n):";
+	while (!(cin >> c.num_work_online) || c.num_work_online < 0 || c.num_work_online > c.num_work) {
+		cout << "Неверный ввод. Введите целое в диапазоне 0.." << c.num_work << ";";
+		clear_stdin();
+	}
 	cout << "Введите класс станциии:";
-	cin >> c.class_cs;
+	getline(cin, c.class_cs);
 }
 
 void ShowAll(Pipe &t, CS &c) {
@@ -53,17 +81,42 @@ void ShowAll(Pipe &t, CS &c) {
 }
 
 void EditPipe(Pipe &t) {
-	cout << "\nВведите новый статус трубы (0-не в ремонте/1-в ремонте): ";
-	cin >> t.status;
+	cout << "Текущий статус трубы: " << (t.status ? "в ремонте" : "не в ремонте") << endl;
+	cout << "Введите новый статус трубы (0-не в ремонте/1-в ремонте): ";
+	int temp_status;
+	while (!(cin >> temp_status) || (temp_status != 0 && temp_status != 1)) {
+		cout << "Неверный ввод. Введите 0 или 1: ";
+		clear_stdin();
+	}
+	t.status = (temp_status == 1);
+	clear_stdin();
 }
 
 void EditCS(CS &c) {
+	cout << "Текущее количество рабочих цехов: " << c.num_work_online << " из " << c.num_work << endl;
+	cout << "Чтобы запустить цех, введите: 1\nЧтобы остановить цех, введите: 0\nВаш выбор: ";
 	int opt;
-	cout << "\nЧтобы запустить цех, введите: 1" << endl
-		<< "Чтобы остановить цех, введите: 0\n";
-	cin >> opt;
-	if (opt == 1) {c.num_work_online++; }
-	else { c.num_work_online--; }
+	while (!(cin >> opt) || (opt != 0 && opt != 1)) {
+		cout << "Неверный ввод. Введите 1 для запуска, 0 для остановки: ";
+		clear_stdin();
+	}
+	if (opt == 1) {
+		if (c.num_work_online < c.num_work) {
+			c.num_work_online++;
+			cout << "Цех запущен. Рабочих цехов: " << c.num_work_online << "\n";
+		}
+		else { cout << "Все цеха уже в работе, запуск невозможен.\n"; }
+	}
+	else {
+		if (c.num_work_online > 0) {
+			c.num_work_online--;
+			cout << "Цех остановлен. Рабочих цехов: " << c.num_work_online << "\n";
+		}
+		else {
+			cout << "Нет рабочих цехов для остановки.\n";
+		}
+	}
+	clear_stdin();
 }
 
 void Show_menu(Pipe &t, CS &c) {
