@@ -65,6 +65,7 @@ void AddCS(CS &c) {
 		cout << "Неверный ввод. Введите целое в диапазоне 0.." << c.num_work << ";";
 		clear_stdin();
 	}
+	clear_stdin();
 	cout << "Введите класс станциии:";
 	getline(cin, c.class_cs);
 }
@@ -119,8 +120,92 @@ void EditCS(CS &c) {
 	clear_stdin();
 }
 
+int Save(const Pipe& t, const CS& c) {
+	ofstream fout("data.txt");
+	if (!fout) { cerr << "Ошибка при создании/перезаписи файла data.txt!\n"; return 1; }
+	fout << "Труба:\n"
+		<< t.name << '\n'
+		<< t.length << '\n'
+		<< t.diameter << '\n'
+		<< (t.status ? 1 : 0) << '\n'
+		<< "Компрессорная станция:\n"
+		<< c.name << '\n'
+		<< c.num_work << '\n'
+		<< c.num_work_online << '\n'
+		<< c.class_cs << '\n';
+	fout.close();
+	cout << "Данные успешно сохранены в файл data.txt!\n";
+	return 0;
+}
+
+int Download(Pipe& t, CS& c) {
+	ifstream fin("data.txt");
+	if (!fin) {
+		cerr << "Ошибка при открытии файла data.txt (файл не найден?)\n";
+		return 1;
+	}
+
+	string line;
+	bool gotPipe = false;
+	bool gotCS = false;
+
+	try {
+		while (getline(fin, line)) {
+			if (line == "Труба:") {
+				if (!getline(fin, t.name)) throw runtime_error("Ожидалось имя трубы");
+				if (!getline(fin, line)) throw runtime_error("Ожидалась длина трубы");
+				t.length = stof(line);
+				if (!getline(fin, line)) throw runtime_error("Ожидался диаметр трубы");
+				t.diameter = stoi(line);
+				if (!getline(fin, line)) throw runtime_error("Ожидался статус трубы");
+				if (line == "1" || line == "true" || line == "True") t.status = true;
+				else t.status = false;
+				gotPipe = true;
+			}
+			else if (line == "Компрессорная станция:") {
+				if (!getline(fin, c.name)) throw runtime_error("Ожидалось имя КС");
+				if (!getline(fin, line)) throw runtime_error("Ожидалось количество цехов");
+				c.num_work = stoi(line);
+				if (!getline(fin, line)) throw runtime_error("Ожидалось количество рабочих цехов");
+				c.num_work_online = stoi(line);
+				if (!getline(fin, c.class_cs)) throw runtime_error("Ожидался класс станции");
+				if (c.num_work < 0) c.num_work = 0;
+				if (c.num_work_online < 0) c.num_work_online = 0;
+				if (c.num_work_online > c.num_work) c.num_work_online = c.num_work;
+				gotCS = true;
+			}
+			else if (line.empty()) {
+				continue;
+			}
+			else {
+				continue;
+			}
+		}
+	}
+	catch (const invalid_argument& e) {
+		cerr << "Ошибка формата числа при чтении файла: " << e.what() << '\n';
+		return 2;
+	}
+	catch (const out_of_range& e) {
+		cerr << "Число в файле выходит за допустимый диапазон: " << e.what() << '\n';
+		return 3;
+	}
+	catch (const runtime_error& e) {
+		cerr << "Ошибка при чтении файла: " << e.what() << '\n';
+		return 4;
+	}
+
+	if (!gotPipe && !gotCS) {
+		cerr << "Файл прочитан, но в нём не найдено ни секции 'Труба:', ни 'Компрессорная станция:'.\n";
+		return 5;
+	}
+
+	cout << "Данные успешно загружены из data.txt!\n";
+	return 0;
+}
+
 void Show_menu(Pipe &t, CS &c) {
-	int option;
+	int option = 0;
 	while (true) {
 		cout << "\nВыберите опцию:\n"
 			<< "1. Добавить трубу\n"
@@ -132,13 +217,19 @@ void Show_menu(Pipe &t, CS &c) {
 			<< "7. Загрузить\n"
 			<< "0. Выход\n"
 			<< "Ваш выбор: ";
-		cin >> option;
+		if (!(cin >> option)) {
+			cout << "Неверный ввод. Введите число от 0 до 7.\n";
+			clear_stdin();
+			continue;
+		}
 		switch (option) {
 		case 1: AddPipe(t); break;
 		case 2: AddCS(c); break;
 		case 3: ShowAll(t, c); break;
 		case 4: EditPipe(t); break;
 		case 5: EditCS(c); break;
+		case 6: Save(t, c); break;
+		case 7: Download(t, c); break;
 		case 0: return;
 		default: cout << "\nВыбрана несуществующая опция, введите число от 0 до 7!\n\n";
 		}
