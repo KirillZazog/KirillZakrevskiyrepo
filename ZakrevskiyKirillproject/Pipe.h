@@ -23,8 +23,9 @@ public:
     void setDiameter(int newDiameter) { diameter = newDiameter; }
     void setInRepair(bool repair) { inRepair = repair; }
 
-    void display(int id) const;
     void edit();
     void save(std::ostream& out, int id) const;
     static Pipe load(std::istream& in, int& id);
+
+    friend std::ostream& operator<<(std::ostream& os, const Pipe& pipe);
 };

@@ -19,16 +19,6 @@ void CompressorStation::setActiveWorkshops(int active) {
     activeWorkshops = (active <= totalWorkshops) ? active : totalWorkshops;
 }
 
-void CompressorStation::display(int id) const {
-    std::cout << "КС ID: " << id << "\n"
-        << "  Название: " << name << "\n"
-        << "  Всего цехов: " << totalWorkshops << "\n"
-        << "  Рабочих цехов: " << activeWorkshops << "\n"
-        << "  Незадействовано: " << std::fixed << std::setprecision(1)
-        << getUnusedPercent() << "%\n"
-        << "  Класс: " << efficiency << "\n";
-}
-
 void CompressorStation::edit() {
     if (totalWorkshops == 0) {
         std::cout << "Невозможно изменить: всего цехов = 0.\n";
@@ -74,7 +64,7 @@ void CompressorStation::save(std::ostream& out, int id) const {
 
 CompressorStation CompressorStation::load(std::istream& in, int& id) {
     std::string line;
-    std::getline(in, line); // считываем ID
+    std::getline(in, line);
     id = std::stoi(line);
 
     std::string name;
@@ -87,7 +77,15 @@ CompressorStation CompressorStation::load(std::istream& in, int& id) {
     std::string eff;
     std::getline(in, eff);
 
-    std::getline(in, line); // считываем </CS>
+    std::getline(in, line);
 
     return CompressorStation(name, total, active, eff);
+}
+
+std::ostream& operator<<(std::ostream& os, const CompressorStation& cs) {
+    os << "КС: " << cs.name
+        << " \n| Всего цехов: " << cs.totalWorkshops
+        << " \n| Работающих цехов: " << cs.activeWorkshops
+        << " \n| Класс: " << cs.efficiency;
+    return os;
 }

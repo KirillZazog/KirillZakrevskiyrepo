@@ -26,11 +26,12 @@ public:
     void setActiveWorkshops(int active);
     void setEfficiency(const std::string& eff) { efficiency = eff; }
 
-    void display(int id) const;
     void edit();
 
     void save(std::ostream& out, int id) const;
     static CompressorStation load(std::istream& in, int& id);
+
+    friend std::ostream& operator<<(std::ostream& os, const CompressorStation& cs);
 };
 
 #endif

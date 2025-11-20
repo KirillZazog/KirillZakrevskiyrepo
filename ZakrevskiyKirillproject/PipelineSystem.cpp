@@ -45,8 +45,9 @@ void PipelineSystem::displayAllPipes() const {
     }
     std::cout << "\n=== СПИСОК ВСЕХ ТРУБ ===\n";
     for (const auto& [id, pipe] : pipes) {
-        pipe.display(id);
-        std::cout << "---\n";
+        std::cout << "\nТруба ID: " << id << "\n"
+            << pipe;
+        std::cout << "\n---\n";
     }
 }
 
@@ -57,8 +58,9 @@ void PipelineSystem::displayAllStations() const {
     }
     std::cout << "\n=== СПИСОК ВСЕХ КС ===\n";
     for (const auto& [id, station] : stations) {
-        station.display(id);
-        std::cout << "---\n";
+        std::cout << "КС ID: " << id << "\n"
+            << station;
+        std::cout << "\n---\n";
     }
 }
 
@@ -75,7 +77,6 @@ void PipelineSystem::editPipe() {
     auto it = pipes.find(id);
     if (it != pipes.end()) {
         it->second.edit();
-        // fix logger
         Logger::log("Отредактирована труба ID " + std::to_string(id));
     }
     else {
@@ -96,7 +97,6 @@ void PipelineSystem::editStation() {
     auto it = stations.find(id);
     if (it != stations.end()) {
         it->second.edit();
-        // fix logger
         Logger::log("Отредактирована КС ID " + std::to_string(id));
     }
     else {
@@ -159,12 +159,14 @@ void PipelineSystem::displaySearchResults(const std::vector<int>& ids, bool isPi
     std::cout << "\nНайдено: " << ids.size() << "\n";
     for (int id : ids) {
         if (isPipe) {
-            pipes.at(id).display(id);
+            std::cout << "\nТруба ID: " << id << "\n"
+                << pipes.at(id);
         }
         else {
-            stations.at(id).display(id);
+            std::cout << "КС ID: " << id << "\n"
+                << stations.at(id);
         }
-        std::cout << "---\n";
+        std::cout << "\n---\n";
     }
 }
 

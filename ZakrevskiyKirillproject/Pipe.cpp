@@ -8,14 +8,6 @@ Pipe::Pipe(const std::string& name, float length, int diameter, bool inRepair)
     : name(name), length(length), diameter(diameter), inRepair(inRepair) {
 }
 
-void Pipe::display(int id) const {
-    std::cout << "Труба ID: " << id << "\n"
-        << "  Название: " << name << "\n"
-        << "  Длина: " << length << " км\n"
-        << "  Диаметр: " << diameter << " мм\n"
-        << "  Статус: " << (inRepair ? "в ремонте" : "не в ремонте") << "\n";
-}
-
 void Pipe::edit() {
     std::cout << "Текущий статус: " << (inRepair ? "в ремонте" : "не в ремонте") << "\n";
     inRepair = getValidBool("Введите новый статус (0-не в ремонте/1-в ремонте)");
@@ -53,4 +45,11 @@ Pipe Pipe::load(std::istream& in, int& id) {
     std::getline(in, line);
 
     return Pipe(name, length, diameter, repairStatus == 1);
+}
+
+std::ostream& operator<<(std::ostream& os, const Pipe& pipe) {
+    os << "Труба: " << pipe.name << "\n| Длина: " << pipe.length << " км"
+        << "\n| Диаметр: " << pipe.diameter << " мм"
+        << "\n| Статус: " << (pipe.inRepair ? "в ремонте" : "не в ремонте");
+    return os;
 }
