@@ -3,6 +3,7 @@
 
 #include "Pipe.h"
 #include "CompressorStation.h"
+#include "PipelineManager.h"
 #include <unordered_map>
 #include <vector>
 #include <functional>
@@ -13,6 +14,7 @@ private:
     std::unordered_map<int, CompressorStation> stations;
     int nextPipeId;
     int nextStationId;
+    PipelineManager manager;
 
 public:
     PipelineSystem();
@@ -37,6 +39,9 @@ public:
 
     void saveToFile(const std::string& filename) const;
     void loadFromFile(const std::string& filename);
+
+    void connectStationsMenu();
+    void topoSortMenu();
 
 private:
     template<typename Object>

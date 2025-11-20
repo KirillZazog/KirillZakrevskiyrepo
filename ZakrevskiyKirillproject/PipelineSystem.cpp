@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-PipelineSystem::PipelineSystem() : nextPipeId(1), nextStationId(1) {}
+PipelineSystem::PipelineSystem() : manager(pipes, stations), nextPipeId(1), nextStationId(1) {}
 
 void PipelineSystem::addPipe() {
     std::cout << "\n=== ДОБАВЛЕНИЕ ТРУБЫ ===\n";
@@ -111,16 +111,22 @@ void PipelineSystem::deletePipe() {
     }
 
     displayAllPipes();
-    std::cout << "Введите ID трубы для удаления: ";
-    int id = getValidInt("", 1);
+    int id = getValidInt("Введите ID трубы для удаления: ", 1);
 
-    if (pipes.erase(id)) {
-        Logger::log("Удалена труба ID " + std::to_string(id));
-        std::cout << "Труба успешно удалена.\n";
+    if (!pipes.count(id)) {
+        std::cout << "Ошибка: труба с таким ID не существует.\n";
+        return;
     }
-    else {
-        std::cout << "Труба с ID " << id << " не найдена.\n";
+
+    if (manager.connections.count(id)) {
+        std::cout << "Ошибка: труба участвует в соединении и не может быть удалена.\n";
+        return;
     }
+
+    pipes.erase(id);
+    Logger::log("Удалена труба ID " + std::to_string(id));
+
+    std::cout << "Труба успешно удалена.\n";
 }
 
 void PipelineSystem::deleteStation() {
@@ -130,16 +136,24 @@ void PipelineSystem::deleteStation() {
     }
 
     displayAllStations();
-    std::cout << "Введите ID КС для удаления: ";
-    int id = getValidInt("", 1);
+    int id = getValidInt("Введите ID КС для удаления: ", 1);
 
-    if (stations.erase(id)) {
-        Logger::log("Удалена КС ID " + std::to_string(id));
-        std::cout << "КС успешно удалена.\n";
+    if (!stations.count(id)) {
+        std::cout << "Ошибка: КС с таким ID не существует.\n";
+        return;
     }
-    else {
-        std::cout << "КС с ID " << id << " не найдена.\n";
+
+    for (const auto& [pipeId, conn] : manager.connections) {
+        if (conn.first == id || conn.second == id) {
+            std::cout << "Ошибка: КС участвует в соединении и не может быть удалена.\n";
+            return;
+        }
     }
+
+    stations.erase(id);
+    Logger::log("Удалена КС ID " + std::to_string(id));
+
+    std::cout << "КС успешно удалена.\n";
 }
 
 std::vector<int> PipelineSystem::findPipesByFilter(std::function<bool(const Pipe&)> filter) const {
@@ -360,4 +374,64 @@ void PipelineSystem::loadFromFile(const std::string& filename) {
     Logger::log("Данные загружены из файла: " + filename);
     std::cout << "Данные успешно загружены из " << filename << "\n";
     std::cout << "Загружено: труб - " << pipes.size() << ", КС - " << stations.size() << "\n";
+}
+
+void PipelineSystem::connectStationsMenu() {
+    if (stations.empty()) {
+        std::cout << "Нет станций!\n";
+        return;
+    }
+
+    std::cout << "Введите ID станции входа: ";
+    int in = getValidInt("", 0, nextStationId);
+
+    if (!stations.count(in)) {
+        std::cout << "Станции с таким ID нет!\n";
+        return;
+    }
+
+    std::cout << "Введите ID станции выхода: ";
+    int out = getValidInt("", 0, nextStationId);
+
+    if (!stations.count(out)) {
+        std::cout << "Станции с таким ID нет!\n";
+        return;
+    }
+
+    std::cout << "Введите диаметр трубы (500/700/1000/1400): ";
+    int diameter = getValidInt("", 500, 2000);
+
+    int pipe_id = manager.findFreePipe(diameter);
+
+    if (pipe_id == -1) {
+        std::cout << "Нет свободной трубы с таким диаметром. Создайте трубу.\n";
+        addPipe();
+
+        pipe_id = manager.findFreePipe(diameter);
+        if (pipe_id == -1) {
+            std::cout << "Созданная труба не подходит.\n";
+            return;
+        }
+    }
+
+    try {
+        manager.connectStations(in, out, pipe_id);
+        std::cout << "Станции успешно соединены трубой ID = " << pipe_id << "\n";
+    }
+    catch (const std::exception& e) {
+        std::cout << "Ошибка: " << e.what() << "\n";
+    }
+}
+
+void PipelineSystem::topoSortMenu() {
+    try {
+        auto order = manager.getGraph().topologicalSort();
+        std::cout << "Топологический порядок станций:\n";
+        for (int id : order)
+            std::cout << id << " ";
+        std::cout << "\n";
+    }
+    catch (const std::exception& ex) {
+        std::cout << "Ошибка: " << ex.what() << "\n";
+    }
 }
