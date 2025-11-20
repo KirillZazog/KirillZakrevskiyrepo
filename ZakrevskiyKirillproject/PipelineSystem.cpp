@@ -143,23 +143,11 @@ void PipelineSystem::deleteStation() {
 }
 
 std::vector<int> PipelineSystem::findPipesByFilter(std::function<bool(const Pipe&)> filter) const {
-    std::vector<int> results;
-    for (const auto& [id, pipe] : pipes) {
-        if (filter(pipe)) {
-            results.push_back(id);
-        }
-    }
-    return results;
+    return findObjectsByFilter<Pipe>(pipes, filter);
 }
 
 std::vector<int> PipelineSystem::findStationsByFilter(std::function<bool(const CompressorStation&)> filter) const {
-    std::vector<int> results;
-    for (const auto& [id, station] : stations) {
-        if (filter(station)) {
-            results.push_back(id);
-        }
-    }
-    return results;
+    return findObjectsByFilter<CompressorStation>(stations, filter);
 }
 
 void PipelineSystem::displaySearchResults(const std::vector<int>& ids, bool isPipe) const {
