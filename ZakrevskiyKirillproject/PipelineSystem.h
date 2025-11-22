@@ -42,6 +42,7 @@ public:
 
     void connectStationsMenu();
     void topoSortMenu();
+    void displayGraphMenu();
 
 private:
     template<typename Object>

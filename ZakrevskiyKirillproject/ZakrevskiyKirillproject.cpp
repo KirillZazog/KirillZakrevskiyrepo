@@ -21,8 +21,9 @@ void displayMenu() {
     std::cout << "12. Пакетное удаление труб\n";
     std::cout << "13. Сохранить в файл\n";
     std::cout << "14. Загрузить из файла\n";
-    std::cout << "15. Соединить станции трубой\n";
-    std::cout << "16. Топологическая сортировка графа\n";
+    std::cout << "15. Соединить станции\n";
+    std::cout << "16. Показать соединения графа\n";
+    std::cout << "17. Топологическая сортировка\n";
     std::cout << "0. Выход\n";
     std::cout << "========================================\n";
 }
@@ -33,7 +34,7 @@ int main() {
 
     while (true) {
         displayMenu();
-        int choice = getValidInt("Ваш выбор: ", 0, 16);
+        int choice = getValidInt("Ваш выбор: ", 0, 17);
 
         switch (choice) {
         case 1:
@@ -85,8 +86,10 @@ int main() {
         case 15:
             system.connectStationsMenu();
             break;
-
         case 16:
+            system.displayGraphMenu();
+            break;
+        case 17:
             system.topoSortMenu();
             break;
         case 0:

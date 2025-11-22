@@ -111,21 +111,41 @@ void PipelineSystem::deletePipe() {
     }
 
     displayAllPipes();
-    int id = getValidInt("Введите ID трубы для удаления: ", 1);
+    std::cout << "Введите ID трубы для удаления: ";
+    int id = getValidInt("", 1);
 
     if (!pipes.count(id)) {
-        std::cout << "Ошибка: труба с таким ID не существует.\n";
+        std::cout << "Труба с ID " << id << " не найдена.\n";
         return;
     }
 
-    if (manager.connections.count(id)) {
-        std::cout << "Ошибка: труба участвует в соединении и не может быть удалена.\n";
-        return;
+    if (manager.hasConnection(id)) {
+        std::cout << "\nТруба ID " << id << " участвует в соединении.\n";
+        auto [cs_from, cs_to] = manager.getConnection(id);
+
+        std::cout << "Соединение: КС[" << cs_from << "]";
+        if (stations.count(cs_from)) {
+            std::cout << " \"" << stations.at(cs_from).getName() << "\"";
+        }
+        std::cout << " -> КС[" << cs_to << "]";
+        if (stations.count(cs_to)) {
+            std::cout << " \"" << stations.at(cs_to).getName() << "\"";
+        }
+        std::cout << "\n\n";
+
+        bool confirm = getValidBool("Отключить трубу из графа и удалить?");
+        if (confirm) {
+            manager.disconnectPipe(id);
+            std::cout << "Соединение разорвано, труба отключена из графа.\n";
+        }
+        else {
+            std::cout << "Удаление отменено.\n";
+            return;
+        }
     }
 
     pipes.erase(id);
     Logger::log("Удалена труба ID " + std::to_string(id));
-
     std::cout << "Труба успешно удалена.\n";
 }
 
@@ -136,24 +156,49 @@ void PipelineSystem::deleteStation() {
     }
 
     displayAllStations();
-    int id = getValidInt("Введите ID КС для удаления: ", 1);
+    std::cout << "Введите ID КС для удаления: ";
+    int id = getValidInt("", 1);
 
     if (!stations.count(id)) {
-        std::cout << "Ошибка: КС с таким ID не существует.\n";
+        std::cout << "КС с ID " << id << " не найдена.\n";
         return;
     }
 
-    for (const auto& [pipeId, conn] : manager.connections) {
-        if (conn.first == id || conn.second == id) {
-            std::cout << "Ошибка: КС участвует в соединении и не может быть удалена.\n";
+    if (manager.isStationConnected(id)) {
+        std::cout << "\nКС ID " << id << " участвует в соединениях.\n\n";
+
+        std::cout << "Связанные соединения:\n";
+        int count = 0;
+        for (const auto& [pipeId, conn] : manager.getConnections()) {
+            if (conn.first == id || conn.second == id) {
+                std::cout << "  " << (++count) << ". Труба[" << pipeId << "]: ";
+                std::cout << "КС[" << conn.first << "]";
+                if (stations.count(conn.first)) {
+                    std::cout << " \"" << stations.at(conn.first).getName() << "\"";
+                }
+                std::cout << " -> КС[" << conn.second << "]";
+                if (stations.count(conn.second)) {
+                    std::cout << " \"" << stations.at(conn.second).getName() << "\"";
+                }
+                std::cout << "\n";
+            }
+        }
+        std::cout << "Всего соединений: " << count << "\n\n";
+
+        bool confirm = getValidBool("Отключить все связи из графа и удалить КС?");
+        if (confirm) {
+            manager.disconnectStation(id);
+            std::cout << "Все соединения с КС разорваны, станция отключена из графа.\n";
+        }
+        else {
+            std::cout << "Удаление отменено.\n";
             return;
         }
     }
 
     stations.erase(id);
     Logger::log("Удалена КС ID " + std::to_string(id));
-
-    std::cout << "КС успешно удалена.\n";
+    std::cout << "✓ КС успешно удалена.\n";
 }
 
 std::vector<int> PipelineSystem::findPipesByFilter(std::function<bool(const Pipe&)> filter) const {
@@ -378,60 +423,234 @@ void PipelineSystem::loadFromFile(const std::string& filename) {
 
 void PipelineSystem::connectStationsMenu() {
     if (stations.empty()) {
-        std::cout << "Нет станций!\n";
+        std::cout << "\nНет станций в системе!\n";
+        std::cout << "Сначала добавьте компрессорные станции (опция 2).\n";
         return;
     }
 
-    std::cout << "Введите ID станции входа: ";
-    int in = getValidInt("", 0, nextStationId);
+    if (pipes.empty()) {
+        std::cout << "\nНет труб в системе!\n";
+        std::cout << "Сначала добавьте трубы (опция 1).\n";
+        return;
+    }
+
+    std::cout << "\nСОЕДИНЕНИЕ СТАНЦИЙ ЧЕРЕЗ ТРУБУ\n\n";
+    std::cout << "Доступные станции:\n";
+    std::cout << std::string(60, '-') << "\n";
+    for (const auto& [id, station] : stations) {
+        std::cout << "  КС[" << id << "]: " << station.getName() << "\n";
+    }
+    std::cout << std::string(60, '-') << "\n\n";
+
+    int in = getValidInt("Введите ID станции ВХОДА: ", 1, nextStationId);
 
     if (!stations.count(in)) {
-        std::cout << "Станции с таким ID нет!\n";
+        std::cout << "Станции с ID " << in << " не существует!\n";
         return;
     }
 
-    std::cout << "Введите ID станции выхода: ";
-    int out = getValidInt("", 0, nextStationId);
+    int out = getValidInt("Введите ID станции ВЫХОДА: ", 1, nextStationId);
 
     if (!stations.count(out)) {
-        std::cout << "Станции с таким ID нет!\n";
+        std::cout << "Станции с ID " << out << " не существует!\n";
         return;
     }
 
-    std::cout << "Введите диаметр трубы (500/700/1000/1400): ";
-    int diameter = getValidInt("", 500, 2000);
+    std::cout << "\nВыбрано соединение:\n";
+    std::cout << "  " << stations.at(in).getName() << " [" << in << "]  -->  ";
+    std::cout << stations.at(out).getName() << " [" << out << "]\n\n";
+
+    std::cout << "Стандартные диаметры: 500, 700, 1000, 1400 мм\n";
+    int diameter = getValidInt("Введите требуемый диаметр трубы (мм): ", 100, 2000);
 
     int pipe_id = manager.findFreePipe(diameter);
 
     if (pipe_id == -1) {
-        std::cout << "Нет свободной трубы с таким диаметром. Создайте трубу.\n";
-        addPipe();
+        std::cout << "\nНет свободной трубы с диаметром " << diameter << " мм.\n";
+        std::cout << "Создать новую трубу? ";
 
-        pipe_id = manager.findFreePipe(diameter);
-        if (pipe_id == -1) {
-            std::cout << "Созданная труба не подходит.\n";
+        bool createNew = getValidBool("");
+
+        if (createNew) {
+            addPipe();
+        }
+        else {
+            std::cout << "Операция отменена.\n";
             return;
         }
+    }
+    else {
+        std::cout << "\nНайдена свободная труба:\n";
+        std::cout << "ID: " << pipe_id << "\n";
+        std::cout << "Название: " << pipes.at(pipe_id).getName() << "\n";
+        std::cout << "Диаметр: " << pipes.at(pipe_id).getDiameter() << " мм\n";
+        std::cout << "Длина: " << pipes.at(pipe_id).getLength() << " км\n\n";
     }
 
     try {
         manager.connectStations(in, out, pipe_id);
-        std::cout << "Станции успешно соединены трубой ID = " << pipe_id << "\n";
+
+        std::cout << "\nСОЕДИНЕНИЕ УСПЕШНО СОЗДАНО\n\n";
+
+        std::cout << "Детали соединения:\n";
+        std::cout << "КС входа:  [" << in << "] " << stations.at(in).getName() << "\n";
+        std::cout << "Труба:     [" << pipe_id << "] " << pipes.at(pipe_id).getName() << "\n";
+        std::cout << "КС выхода: [" << out << "] " << stations.at(out).getName() << "\n";
+
+        Logger::log("Соединены КС[" + std::to_string(in) + "] -> КС[" +
+            std::to_string(out) + "] через трубу[" + std::to_string(pipe_id) + "]");
     }
     catch (const std::exception& e) {
-        std::cout << "Ошибка: " << e.what() << "\n";
+        std::cout << "\nОШИБКА ПРИ СОЗДАНИИ СОЕДИНЕНИЯ\n\n";
+        std::cout << e.what() << "\n\n";
+        Logger::log("Ошибка соединения: " + std::string(e.what()));
+    }
+}
+
+void PipelineSystem::displayGraphMenu() {
+    const auto& connections = manager.getConnections();
+    const Graph& g = manager.getGraph();
+
+    std::cout << "\nСОЕДИНЕНИЯ ГРАФА ТРУБОПРОВОДНОЙ СЕТИ\n\n";
+
+    if (connections.empty()) {
+        std::cout << "Граф пуст. Соединений нет.\n\n";
+        std::cout << "Используйте опцию 15 для создания соединений между станциями.\n";
+        return;
+    }
+
+    int counter = 1;
+    for (const auto& [pipeId, conn] : connections) {
+        auto [cs_from, cs_to] = conn;
+
+        std::string fromName = stations.count(cs_from) ?
+            stations.at(cs_from).getName() : "Неизвестная";
+        std::string toName = stations.count(cs_to) ?
+            stations.at(cs_to).getName() : "Неизвестная";
+        std::string pipeName = pipes.count(pipeId) ?
+            pipes.at(pipeId).getName() : "Неизвестная";
+
+        std::cout << counter++ << ". ";
+        std::cout << "КС[" << cs_from << "] \"" << fromName << "\"\n";
+        std::cout << "     ↓ Труба[" << pipeId << "] \"" << pipeName << "\"\n";
+        std::cout << "   КС[" << cs_to << "] \"" << toName << "\"\n\n";
+    }
+
+    auto isolated = g.getIsolatedNodes();
+    if (!isolated.empty()) {
+        std::cout << "изолированные станции (без соединений):\n";
+        std::cout << "   ";
+        for (int id : isolated) {
+            std::string name = stations.count(id) ?
+                stations.at(id).getName() : "Неизвестная";
+            std::cout << "КС[" << id << "] \"" << name << "\"  ";
+        }
+    }
+
+    if (g.hasCycle()) {
+        auto cycle = g.findCycle();
+        std::cout << "Обнаруженный цикл:\n   ";
+        for (size_t i = 0; i < cycle.size(); ++i) {
+            std::cout << "КС[" << cycle[i] << "]";
+            if (i < cycle.size() - 1) {
+                std::cout << " → ";
+            }
+        }
+
+    }
+    else {
+        std::cout << "Граф ацикличен.\nТопологическая сортировка возможна (опция 17)\n";
     }
 }
 
 void PipelineSystem::topoSortMenu() {
-    try {
-        auto order = manager.getGraph().topologicalSort();
-        std::cout << "Топологический порядок станций:\n";
-        for (int id : order)
-            std::cout << id << " ";
+    const Graph& g = manager.getGraph();
+
+    std::cout << "\nТОПОЛОГИЧЕСКАЯ СОРТИРОВКА ГРАФА СТАНЦИЙ\n\n";
+
+    if (g.nodeCount() == 0) {
+        std::cout << "Граф пуст.\n\n";
+        std::cout << "Сначала создайте соединения между станциями (опция 15).\n";
+        return;
+    }
+
+    std::cout << "   Информация о графе:\n";
+    std::cout << "   Вершин (станций): " << g.nodeCount() << "\n";
+    std::cout << "   Рёбер (труб):     " << g.edgeCount() << "\n\n";
+
+    auto isolated = g.getIsolatedNodes();
+    if (!isolated.empty()) {
+        std::cout << "    Обнаружены изолированные станции: ";
+        for (int id : isolated) {
+            std::cout << "КС[" << id << "] ";
+        }
         std::cout << "\n";
+        std::cout << "   Они будут включены в сортировку, но порядок их\n";
+        std::cout << "   относительно других станций произволен.\n\n";
+    }
+
+    if (g.hasCycle()) {
+        std::cout << "ОШИБКА: ГРАФ СОДЕРЖИТ ЦИКЛ\n\n";
+
+        std::cout << "Топологическая сортировка невозможна для графа с циклами.\n\n";
+
+        auto cycle = g.findCycle();
+
+        std::cout << "  Обнаруженный цикл:\n\n";
+        std::cout << "   ";
+        for (size_t i = 0; i < cycle.size(); ++i) {
+            int id = cycle[i];
+            std::string name = stations.count(id) ?
+                stations.at(id).getName() : "Неизвестная";
+
+            std::cout << "КС[" << id << "] \"" << name << "\"";
+
+            if (i < cycle.size() - 1) {
+                std::cout << "\n   ↓\n   ";
+            }
+        }
+        Logger::log("Топосортировка: обнаружен цикл, операция невозможна");
+        return;
+    }
+
+    try {
+        auto order = g.topologicalSort();
+
+        std::cout << " ТОПОЛОГИЧЕСКИЙ ПОРЯДОК СТАНЦИЙ:\n";
+        std::cout << std::string(60, '-') << "\n";
+
+        for (size_t i = 0; i < order.size(); ++i) {
+            int id = order[i];
+            std::string name = stations.count(id) ?
+                stations.at(id).getName() : "Неизвестная КС";
+
+            std::cout << "  " << (i + 1) << ". КС[" << id << "] \"" << name << "\"";
+
+            if (stations.count(id)) {
+                const auto& cs = stations.at(id);
+                std::cout << " (" << cs.getActiveWorkshops() << "/"
+                    << cs.getTotalWorkshops() << " цехов)";
+            }
+            std::cout << "\n";
+        }
+        std::cout << std::string(60, '-') << "\n";
+
+        std::cout << "  Порядок обработки (ID):\n   ";
+        for (size_t i = 0; i < order.size(); ++i) {
+            std::cout << order[i];
+            if (i < order.size() - 1) {
+                std::cout << " → ";
+            }
+        }
+        std::cout << "\n";
+        Logger::log("Топологическая сортировка выполнена успешно, станций: " +
+            std::to_string(order.size()));
+
     }
     catch (const std::exception& ex) {
-        std::cout << "Ошибка: " << ex.what() << "\n";
+        std::cout << "НЕПРЕДВИДЕННАЯ ОШИБКА\n\n";
+        std::cout << "Сообщение об ошибке: " << ex.what() << "\n\n";
+
+        Logger::log("Ошибка топосортировки: " + std::string(ex.what()));
     }
 }
