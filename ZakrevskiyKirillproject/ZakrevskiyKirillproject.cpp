@@ -24,6 +24,8 @@ void displayMenu() {
     std::cout << "15. Соединить станции\n";
     std::cout << "16. Показать соединения графа\n";
     std::cout << "17. Топологическая сортировка\n";
+    std::cout << "18. Кратчайший путь между двумя КС в сети\n";
+    std::cout << "19. Максимальный поток в сети\n";
     std::cout << "0. Выход\n";
     std::cout << "========================================\n";
 }
@@ -34,7 +36,7 @@ int main() {
 
     while (true) {
         displayMenu();
-        int choice = getValidInt("Ваш выбор: ", 0, 17);
+        int choice = getValidInt("Ваш выбор: ", 0, 19);
 
         switch (choice) {
         case 1:
@@ -92,9 +94,15 @@ int main() {
         case 17:
             system.topoSortMenu();
             break;
+        case 18:
+            system.ShortestPath();
+            break;
+        case 19:
+            system.MaxFlow();
+            break;
         case 0:
             Logger::close();
-            std::cout << "\nВыход из программы. До свидания!\n";
+            std::cout << "\nВыход из программы.\n";
             return 0;
         }
     }

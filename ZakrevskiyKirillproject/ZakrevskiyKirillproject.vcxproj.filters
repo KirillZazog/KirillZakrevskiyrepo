@@ -36,7 +36,7 @@
     <ClCompile Include="Graph.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="PipelineManager.cpp">
+    <ClCompile Include="NetworkEngine.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,7 +59,7 @@
     <ClInclude Include="Graph.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="PipelineManager.h">
+    <ClInclude Include="NetworkEngine.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

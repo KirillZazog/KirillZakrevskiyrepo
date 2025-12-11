@@ -4,15 +4,17 @@
 #include "CompressorStation.h"
 #include "Graph.h"
 
-class PipelineManager {
+class NetworkEngine {
 private:
     std::unordered_map<int, Pipe>& pipes;
     std::unordered_map<int, CompressorStation>& stations;
     Graph graph;
     std::unordered_map<int, std::pair<int, int>> connections;
 
+    std::vector<int> dijkstra(int start, int end);
+    double fordFulkerson(int source, int sink);
 public:
-    PipelineManager(std::unordered_map<int, Pipe>& pipes,
+    NetworkEngine(std::unordered_map<int, Pipe>& pipes,
         std::unordered_map<int, CompressorStation>& stations)
         : pipes(pipes), stations(stations) {
     }
@@ -35,6 +37,9 @@ public:
 
     const Graph& getGraph() const { return graph; }
     void displayConnections() const;
+
+    std::vector<int> getShortestPath(int start, int end);
+    double getMaxFlow(int source, int sink);
 
     void clear();
 };

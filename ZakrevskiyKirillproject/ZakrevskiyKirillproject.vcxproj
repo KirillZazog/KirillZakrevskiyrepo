@@ -132,7 +132,7 @@
     <ClCompile Include="Graph.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Pipe.cpp" />
-    <ClCompile Include="PipelineManager.cpp" />
+    <ClCompile Include="NetworkEngine.cpp" />
     <ClCompile Include="PipelineSystem.cpp" />
     <ClCompile Include="Validation.cpp" />
     <ClCompile Include="ZakrevskiyKirillproject.cpp" />
@@ -142,7 +142,7 @@
     <ClInclude Include="Graph.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Pipe.h" />
-    <ClInclude Include="PipelineManager.h" />
+    <ClInclude Include="NetworkEngine.h" />
     <ClInclude Include="PipelineSystem.h" />
     <ClInclude Include="Validation.h" />
   </ItemGroup>

@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-PipelineSystem::PipelineSystem() : manager(pipes, stations), nextPipeId(1), nextStationId(1) {}
+PipelineSystem::PipelineSystem() : engine(pipes, stations), nextPipeId(1), nextStationId(1) {}
 
 void PipelineSystem::addPipe() {
     std::cout << "\n=== ДОБАВЛЕНИЕ ТРУБЫ ===\n";
@@ -119,9 +119,9 @@ void PipelineSystem::deletePipe() {
         return;
     }
 
-    if (manager.hasConnection(id)) {
+    if (engine.hasConnection(id)) {
         std::cout << "\nТруба ID " << id << " участвует в соединении.\n";
-        auto [cs_from, cs_to] = manager.getConnection(id);
+        auto [cs_from, cs_to] = engine.getConnection(id);
 
         std::cout << "Соединение: КС[" << cs_from << "]";
         if (stations.count(cs_from)) {
@@ -135,7 +135,7 @@ void PipelineSystem::deletePipe() {
 
         bool confirm = getValidBool("Отключить трубу из графа и удалить?");
         if (confirm) {
-            manager.disconnectPipe(id);
+            engine.disconnectPipe(id);
             std::cout << "Соединение разорвано, труба отключена из графа.\n";
         }
         else {
@@ -164,12 +164,12 @@ void PipelineSystem::deleteStation() {
         return;
     }
 
-    if (manager.isStationConnected(id)) {
+    if (engine.isStationConnected(id)) {
         std::cout << "\nКС ID " << id << " участвует в соединениях.\n\n";
 
         std::cout << "Связанные соединения:\n";
         int count = 0;
-        for (const auto& [pipeId, conn] : manager.getConnections()) {
+        for (const auto& [pipeId, conn] : engine.getConnections()) {
             if (conn.first == id || conn.second == id) {
                 std::cout << "  " << (++count) << ". Труба[" << pipeId << "]: ";
                 std::cout << "КС[" << conn.first << "]";
@@ -187,7 +187,7 @@ void PipelineSystem::deleteStation() {
 
         bool confirm = getValidBool("Отключить все связи из графа и удалить КС?");
         if (confirm) {
-            manager.disconnectStation(id);
+            engine.disconnectStation(id);
             std::cout << "Все соединения с КС разорваны, станция отключена из графа.\n";
         }
         else {
@@ -463,7 +463,7 @@ void PipelineSystem::connectStationsMenu() {
     std::cout << "Стандартные диаметры: 500, 700, 1000, 1400 мм\n";
     int diameter = getValidInt("Введите требуемый диаметр трубы (мм): ", 100, 2000);
 
-    int pipe_id = manager.findFreePipe(diameter);
+    int pipe_id = engine.findFreePipe(diameter);
 
     if (pipe_id == -1) {
         std::cout << "\nНет свободной трубы с диаметром " << diameter << " мм.\n";
@@ -488,7 +488,7 @@ void PipelineSystem::connectStationsMenu() {
     }
 
     try {
-        manager.connectStations(in, out, pipe_id);
+        engine.connectStations(in, out, pipe_id);
 
         std::cout << "\nСОЕДИНЕНИЕ УСПЕШНО СОЗДАНО\n\n";
 
@@ -508,8 +508,8 @@ void PipelineSystem::connectStationsMenu() {
 }
 
 void PipelineSystem::displayGraphMenu() {
-    const auto& connections = manager.getConnections();
-    const Graph& g = manager.getGraph();
+    const auto& connections = engine.getConnections();
+    const Graph& g = engine.getGraph();
 
     std::cout << "\nСОЕДИНЕНИЯ ГРАФА ТРУБОПРОВОДНОЙ СЕТИ\n\n";
 
@@ -564,7 +564,7 @@ void PipelineSystem::displayGraphMenu() {
 }
 
 void PipelineSystem::topoSortMenu() {
-    const Graph& g = manager.getGraph();
+    const Graph& g = engine.getGraph();
 
     std::cout << "\nТОПОЛОГИЧЕСКАЯ СОРТИРОВКА ГРАФА СТАНЦИЙ\n\n";
 
@@ -652,5 +652,55 @@ void PipelineSystem::topoSortMenu() {
         std::cout << "Сообщение об ошибке: " << ex.what() << "\n\n";
 
         Logger::log("Ошибка топосортировки: " + std::string(ex.what()));
+    }
+}
+
+void PipelineSystem::ShortestPath() {
+    int cs_start, cs_end;
+
+    std::cout << "\nВведите ID начальной КС: ";
+    std::cin >> cs_start;
+
+    std::cout << "Введите ID конечной КС: ";
+    std::cin >> cs_end;
+
+    try {
+        auto path = engine.getShortestPath(cs_start, cs_end);
+
+        if (path.empty()) {
+            std::cout << "\nПуть между указанными станциями отсутствует.";
+            return;
+        }
+
+        std::cout << "\nКратчайший путь:\n";
+        for (size_t i = 0; i < path.size(); i++) {
+            std::cout << path[i];
+            if (i + 1 < path.size()) std::cout << " -> ";
+        }
+    }
+    catch (const std::exception& ex) {
+        std::cout << "\nОшибка: " << ex.what();
+    }
+}
+
+void PipelineSystem::MaxFlow() {
+    int cs_source, cs_sink;
+
+    std::cout << "\nВведите ID исходной КС (источника): ";
+    std::cin >> cs_source;
+
+    std::cout << "Введите ID конечной КС (стока): ";
+    std::cin >> cs_sink;
+
+    try {
+        double flow = engine.getMaxFlow(cs_source, cs_sink);
+
+        std::cout << "\nМаксимальный поток между КС["
+            << cs_source << "] и КС["
+            << cs_sink << "] составляет: "
+            << flow;
+    }
+    catch (const std::exception& ex) {
+        std::cout << "\nОшибка: " << ex.what();
     }
 }
