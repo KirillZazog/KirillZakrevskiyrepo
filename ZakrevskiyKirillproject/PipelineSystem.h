@@ -3,7 +3,7 @@
 
 #include "Pipe.h"
 #include "CompressorStation.h"
-#include "PipelineManager.h"
+#include "NetworkEngine.h"
 #include <unordered_map>
 #include <vector>
 #include <functional>
@@ -14,7 +14,7 @@ private:
     std::unordered_map<int, CompressorStation> stations;
     int nextPipeId;
     int nextStationId;
-    PipelineManager manager;
+    NetworkEngine engine;
 
 public:
     PipelineSystem();
@@ -43,6 +43,9 @@ public:
     void connectStationsMenu();
     void topoSortMenu();
     void displayGraphMenu();
+
+    void ShortestPath();
+    void MaxFlow();
 
 private:
     template<typename Object>
